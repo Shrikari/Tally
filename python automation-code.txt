@@ -1,0 +1,229 @@
+import unittest
+
+from lib.ui.addnewuserpage import AddNewUserPage
+from lib.ui.homepage import HomePage
+from lib.ui.loginpage import LoginPage
+from lib.ui.userlistpage import UserListPage
+from lib.util import create_driver
+
+
+class TestCreateUser(unittest.TestCase):
+    def setUp(self):
+        self.driver = create_driver.get_driver_instance()
+        self.login_page = LoginPage(self.driver)
+        self.home_page = HomePage(self.driver)
+        self.user_list = UserListPage(self.driver)
+        self.add_new_user = AddNewUserPage(self.driver)
+
+    def tearDown(self):
+        self.driver.close()
+
+    def test_create_user_tc138796(self):
+        self.login_page.wait_for_login_page_to_load()
+        self.login_page.get_username_textbox().send_keys('admin')
+        self.login_page.get_password_textbox().send_keys('manager')
+        self.login_page.get_login_button().click()
+
+        self.home_page.wait_for_home_page_to_load()
+        self.home_page.get_users_tab().click()
+
+        self.user_list.wait_for_user_list_page_to_load()
+        self.user_list.get_add_new_user_button().click()
+
+        self.add_new_user.wait_for_add_new_user_page_to_load()
+        self.add_new_user.get_username_textbox().send_keys('User')
+        self.add_new_user.get_password_textbox().send_keys('pass1')
+        self.add_new_user.get_retype_password_textbox().send_keys('pass1')
+        self.add_new_user.get_first_name_textbox().send_keys('First1')
+        self.add_new_user.get_last_name_textbox().send_keys('Last1')
+        self.add_new_user.get_create_user_button().click()
+
+        self.user_list.wait_for_user_list_page_to_load()
+        actual_text = self.user_list.get_add_user_success_msg().text
+        expected_text = 'User has been successfully added.'
+        assert actual_text == expected_text
+
+        user_text = \
+            self.user_list.get_user_from_list('Last1', 'First1', 'User').text
+
+        assert 'Last1' in user_text
+        assert 'First1' in user_text
+        assert 'User' in user_text
+====================================================================================================
+import unittest
+from selenium.webdriver import Chrome
+from nee.loginpage import LoginPage
+
+class TestLoginS137890P1(unittest.TestCase):
+
+    def setUp(self):
+        self.driver = Chrome("F:/chromedriver.exe")
+        self.driver.maximize_window()
+        self.driver.implicitly_wait(30)
+        self.driver.get('http://localhost')
+        self.login_page = LoginPage(self.driver)
+
+    def tearDown(self):
+        self.driver.close()
+
+    def test_login_invalid_tc1238990(self):
+        # Go to login page
+        self.login_page.wait_for_login_page_to_load()
+        # Enter username
+        self.login_page.get_username_textbox().send_keys("admin")
+        # Enter password
+        self.login_page.get_password_textbox().send_keys('Invalid')
+        # Click on login button
+        self.login_page.get_login_button().click()
+        # Get error msg
+        actual_error_msg = self.login_page.get_login_error_msg().text
+        expected_error_msg = 'Username or Password is invalid. Please try again.'
+        # Verify error msg
+        assert actual_error_msg == expected_error_msg
+===================================================================================================
+add_user:
+from selenium.webdriver.support import expected_conditions
+from selenium.webdriver.support.wait import WebDriverWait
+
+class AddNewUserPage():
+    def __init__(self, driver):
+        self.driver = driver
+
+    def wait_for_add_new_user_page_to_load(self):
+        wait = WebDriverWait(self.driver, 30)
+        wait.until(expected_conditions.visibility_of(
+            self.driver.find_element_by_id('container')))
+
+    def get_username_textbox(self):
+        try:
+            return self.driver.find_element_by_name("username")
+        except:
+            return None
+
+    def get_password_textbox(self):
+        try:
+            return self.driver.find_element_by_name("passwordText")
+        except:
+            return None
+
+    def get_retype_password_textbox(self):
+        try:
+            return self.driver.find_element_by_name("passwordTextRetype")
+        except:
+            return None
+
+    def get_first_name_textbox(self):
+        try:
+            return self.driver.find_element_by_name("firstName")
+        except:
+            return None
+
+    def get_last_name_textbox(self):
+        try:
+            return self.driver.find_element_by_name("lastName")
+        except:
+            return None
+
+    def get_create_user_button(self):
+        try:
+            return self.driver.find_element_by_xpath("//input[@type='submit']")
+        except:
+            return None
+====================================================================================================
+homepage:
+from selenium.webdriver.support import expected_conditions
+from selenium.webdriver.support.wait import WebDriverWait
+
+class HomePage():
+    def __init__(self, driver):
+        self.driver = driver
+
+    def wait_for_home_page_to_load(self):
+        wait = WebDriverWait(self.driver, 30)
+        wait.until(expected_conditions.visibility_of(
+            self.driver.find_element_by_id('container')))
+
+    def get_users_tab(self):
+        try:
+            return self.driver.find_element_by_link_text("Users")
+        except:
+            return None
+
+    def get_logout_button(self):
+        try:
+            return self.driver.find_element_by_xpath("//img[@alt='Logout']")
+        except:
+            return None
+===================================================================================================
+login page:
+from selenium.webdriver.support import expected_conditions
+from selenium.webdriver.support.wait import WebDriverWait
+
+
+class LoginPage():
+    def __init__(self, driver):
+        self.driver = driver
+
+    def wait_for_login_page_to_load(self):
+        wait = WebDriverWait(self.driver, 30)
+        wait.until(expected_conditions.visibility_of(
+            self.driver.find_element_by_name("LoginForm")))
+
+    def get_username_textbox(self):
+        try:
+            element = self.driver.find_element_by_name('username')
+            return element
+        except:
+            return None
+
+    def get_password_textbox(self):
+        try:
+            return self.driver.find_element_by_name("pwd")
+        except:
+            return None
+
+    def get_login_button(self):
+        try:
+            return self.driver.find_element_by_xpath(
+                "//input[@type='submit']")
+        except:
+            return None
+    def get_login_error_msg(self):
+        try:
+            return self.driver.find_element_by_xpath(
+                "//span[contains(text(), 'Password is invalid')]")
+        except:
+            return None
+====================================================================================================
+user list page:
+from selenium.webdriver.support import expected_conditions
+from selenium.webdriver.support.wait import WebDriverWait
+
+class UserListPage():
+    def __init__(self, driver):
+        self.driver = driver
+
+    def wait_for_user_list_page_to_load(self):
+        wait = WebDriverWait(self.driver, 30)
+        wait.until(expected_conditions.visibility_of(
+            self.driver.find_element_by_id('container')))
+
+    def get_add_new_user_button(self):
+        try:
+           return self.driver.find_element_by_xpath("//input[@value='Add New User']")
+        except:
+            return None
+
+    def get_add_user_success_msg(self):
+        try:
+            return self.driver.find_element_by_xpath("//span[text()='User has been successfully added.']")
+        except:
+            return None
+
+    def get_user_from_list(self, lastname, firstname, username):
+        link_text = lastname+', '+firstname+' ('+username+')'
+        try:
+            return self.driver.find_element_by_link_text(link_text)
+        except:
+            return None
+====================================================================================================
